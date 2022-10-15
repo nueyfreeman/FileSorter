@@ -37,11 +37,30 @@ class BbyStack:
     def show_all(self):  # for debug
         print(self.__stack)
 
-    def empty(self):  # returns extension of the file being examined as a string
+    def empty(self):  # returns extension of the file being examined, as a string
         strng = ''
         while self.__stack:
             strng += self.__stack.pop()
         return strng
+
+
+# object to pass target directory and files (so reading code is more intuitive)
+class TargetDir:
+    def __init__(self):
+        self.__path = ''
+        self.__files = []
+
+    def set_path(self, path):
+        self.__path = path
+
+    def get_path(self):
+        return self.__path
+
+    def set_files(self, files_list):
+        self.__files = files_list
+
+    def get_files(self):
+        return self.__files
 
 
 # to reuse yes/no interface option (returns Boolean)
@@ -67,27 +86,27 @@ def get_path():
                 return path
 
 
-# copying a directory tree for debugging or redundancy if there's a mistake made
+# copying a directory tree for debugging or redundancy if there's a mistake made, returns TargetDir
 def copytree():
-    batch = BbyStack()
+    batch = TargetDir()
     working_in = get_path()  # directory I want to copy
     path_to_sort = os.path.join(HOME, input('Name the test file: '))  # path to copy to
-    batch.push(path_to_sort)  # lazy or efficient? -- reusing the stack to return two objects -- (1) the path
+    batch.set_path(path_to_sort)  # record path to be copied/sorted
     try:
         shutil.copytree(working_in, path_to_sort)
     except FileExistsError:  # if I've already created the new directory
         print('A test file already exists.')
     finally:
         sorting = os.listdir(path_to_sort)
-    batch.push(sorting)  # (2) the list of files
+    batch.set_files(sorting)  # record filenames to be sorted
     return batch
 
 
 # Now actually begin sorting files
 done = 0
 sort_this = copytree()
-for index, each in enumerate(sort_this.pop()):  # pops list off
-    file_path = os.path.join(sort_this.peek(), each)  # peeks at path and joins filename
+for index, each in enumerate(sort_this.get_files()):
+    file_path = os.path.join(sort_this.get_path(), each)  # peeks at path and joins filename
     if os.path.isfile(file_path):
         stk = BbyStack()
         all_chars = list(each)
@@ -96,7 +115,7 @@ for index, each in enumerate(sort_this.pop()):  # pops list off
             stk.push(char)
             char = all_chars.pop()
         file_type = stk.empty()  # empty stack to retrieve file type
-        new_path = os.path.join(sort_this.peek(), file_type)  # make the path for this extension
+        new_path = os.path.join(sort_this.get_path(), file_type)  # make the path for this extension
         try:
             os.mkdir(new_path)  # make the new directory if it doesn't exist
         except FileExistsError:
